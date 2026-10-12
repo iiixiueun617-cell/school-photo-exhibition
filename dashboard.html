@@ -638,10 +638,8 @@
 
 
         if (uploadError) {
-
-          throw uploadError;
-
-        }
+  throw new Error("사진 파일 업로드 실패: " + uploadError.message);
+}
 
 
         // DB에 사진 정보 저장
@@ -671,10 +669,8 @@
 
 
         if (insertError) {
-
-          throw insertError;
-
-        }
+  throw new Error("사진 정보 저장 실패: " + insertError.message);
+}
 
 
         message.textContent =
