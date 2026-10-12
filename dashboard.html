@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>사진 관리 | 우리의 시선</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #faf9f6;
+      color: #262626;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Noto Sans KR",
+        sans-serif;
+    }
+
+    header {
+      padding: 28px 5%;
+      border-bottom: 1px solid #e8e5df;
+      background: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    header span {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #918675;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .logout {
+      border: 1px solid #ddd;
+      background: white;
+      padding: 9px 14px;
+      cursor: pointer;
+    }
+
+    main {
+      width: min(1100px, 90%);
+      margin: 50px auto;
+    }
+
+    .intro {
+      margin-bottom: 35px;
+    }
+
+    .intro h2 {
+      font-size: 28px;
+      margin: 0 0 10px;
+    }
+
+    .intro p {
+      color: #777;
+      font-size: 14px;
+    }
+
+    .upload-box {
+      background: white;
+      border: 1px solid #e8e5df;
+      padding: 30px;
+      margin-bottom: 45px;
+    }
+
+    .upload-box h3 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+
+    label {
+      display: block;
+      margin: 18px 0 7px;
+      font-size: 13px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid #ddd;
+      padding: 12px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .upload-button {
+      margin-top: 22px;
+      padding: 13px 20px;
+      border: 0;
+      background: #262626;
+      color: white;
+      cursor: pointer;
+    }
+
+    .upload-button:disabled {
+      opacity: 0.5;
+    }
+
+    #message {
+      margin-top: 15px;
+      font-size: 13px;
+    }
+
+    .photo-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 25px;
+    }
+
+    .photo-card {
+      background: white;
+      border: 1px solid #e8e5df;
+      overflow: hidden;
+    }
+
+    .photo-card img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-info {
+      padding: 18px;
+    }
+
+    .photo-info h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .photo-info p {
+      margin: 0 0 15px;
+      color: #777;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .status {
+      font-size: 11px;
+      display: inline-block;
+      padding: 5px 8px;
+      border: 1px solid #ddd;
+      margin-bottom: 12px;
+    }
+
+    .delete-button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+    }
+
+    .empty {
+      color: #888;
+      font-size: 14px;
+      padding: 30px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <span>SCHOOL PHOTO EXHIBITION</span>
+    <h1>사진 관리자</h1>
+  </div>
+
+  <button class="logout" id="logout-button">
+    로그아웃
+  </button>
+</header>
+
+
+<main>
+
+  <section class="intro">
+    <h2>사진 관리</h2>
+    <p>
+      전시할 사진을 등록하고 관리할 수 있습니다.
+    </p>
+  </section>
+
+
+  <!-- 사진 업로드 -->
+
+  <section class="upload-box">
+
+    <h3>새 사진 등록</h3>
+
+    <label for="photo-file">
+      사진
+    </label>
+
+    <input
+      type="file"
+      id="photo-file"
+      accept="image/*"
+    >
+
+
+    <label for="photo-title">
+      제목
+    </label>
+
+    <input
+      type="text"
+      id="photo-title"
+      placeholder="사진 제목을 입력하세요"
+    >
+
+
+    <label for="photo-description">
+      설명
+    </label>
+
+    <textarea
+      id="photo-description"
+      placeholder="사진에 대한 간단한 설명을 입력하세요"
+    ></textarea>
+
+
+    <button
+      class="upload-button"
+      id="upload-button"
+    >
+      사진 등록
+    </button>
+
+    <div id="message"></div>
+
+  </section>
+
+
+  <!-- 등록된 사진 -->
+
+  <section>
+
+    <h2>등록된 사진</h2>
+
+    <div
+      class="photo-list"
+      id="photo-list"
+    ></div>
+
+  </section>
+
+</main>
+
+
+<script type="module">
+
+  import {
+    createClient
+  } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+
+  // ==========================================
+  // Supabase 연결
+  // ==========================================
+
+  const SUPABASE_URL =
+    "https://hdlzszibzapenifdxuub.supabase.co";
+
+  const SUPABASE_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkbHpzemliemFwZW5pZmR4dXViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2ODc4NTMsImV4cCI6MjEwNzI2Mzg1M30.TGHmdHBWRnZ8rJzy2tioadQqt790sWq3MiD1BYaF4Ac";
+
+
+  const supabase =
+    createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+
+  // ==========================================
+  // HTML 요소
+  // ==========================================
+
+  const fileInput =
+    document.getElementById("photo-file");
+
+  const titleInput =
+    document.getElementById("photo-title");
+
+  const descriptionInput =
+    document.getElementById("photo-description");
+
+  const uploadButton =
+    document.getElementById("upload-button");
+
+  const message =
+    document.getElementById("message");
+
+  const photoList =
+    document.getElementById("photo-list");
+
+  const logoutButton =
+    document.getElementById("logout-button");
+
+
+  // ==========================================
+  // 로그인 상태 확인
+  // ==========================================
+
+  const {
+    data: {
+      session
+    }
+  } = await supabase.auth.getSession();
+
+
+  if (!session) {
+
+    window.location.href =
+      "admin.html";
+
+  }
+
+
+  // ==========================================
+  // 로그아웃
+  // ==========================================
+
+  logoutButton.addEventListener(
+    "click",
+    async () => {
+
+      await supabase.auth.signOut();
+
+      window.location.href =
+        "admin.html";
+
+    }
+  );
+
+
+  // ==========================================
+  // 사진 불러오기
+  // ==========================================
+
+  async function loadPhotos() {
+
+    photoList.innerHTML =
+      "<p>사진을 불러오는 중...</p>";
+
+
+    const {
+      data,
+      error
+    } = await supabase
+      .from("photos")
+      .select("*")
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
+
+
+    if (error) {
+
+      photoList.innerHTML =
+        "<p>사진을 불러오지 못했습니다.</p>";
+
+      console.error(error);
+
+      return;
+
+    }
+
+
+    if (!data || data.length === 0) {
+
+      photoList.innerHTML =
+        '<p class="empty">아직 등록된 사진이 없습니다.</p>';
+
+      return;
+
+    }
+
+
+    photoList.innerHTML = "";
+
+
+    data.forEach(photo => {
+
+      const {
+        data: {
+          publicUrl
+        }
+      } =
+        supabase
+          .storage
+          .from("exhibition-photos")
+          .getPublicUrl(
+            photo.image_path
+          );
+
+
+      const card =
+        document.createElement("article");
+
+      card.className =
+        "photo-card";
+
+
+      card.innerHTML = `
+
+        <img
+          src="${publicUrl}"
+          alt="${photo.title}"
+        >
+
+        <div class="photo-info">
+
+          <div class="status">
+            ${
+              photo.is_published
+                ? "공개"
+                : "비공개"
+            }
+          </div>
+
+          <h3>
+            ${photo.title}
+          </h3>
+
+          <p>
+            ${photo.description || ""}
+          </p>
+
+          <button
+            class="delete-button"
+            data-id="${photo.id}"
+            data-path="${photo.image_path}"
+          >
+            삭제
+          </button>
+
+        </div>
+
+      `;
+
+
+      photoList.appendChild(card);
+
+    });
+
+
+    document
+      .querySelectorAll(".delete-button")
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          async () => {
+
+            const id =
+              button.dataset.id;
+
+            const path =
+              button.dataset.path;
+
+
+            const confirmed =
+              confirm(
+                "이 사진을 삭제할까요?"
+              );
+
+
+            if (!confirmed) {
+              return;
+            }
+
+
+            const {
+              error: deleteError
+            } =
+              await supabase
+                .from("photos")
+                .delete()
+                .eq(
+                  "id",
+                  id
+                );
+
+
+            if (deleteError) {
+
+              alert(
+                "사진 삭제에 실패했습니다."
+              );
+
+              console.error(
+                deleteError
+              );
+
+              return;
+
+            }
+
+
+            await supabase
+              .storage
+              .from("exhibition-photos")
+              .remove([
+                path
+              ]);
+
+
+            loadPhotos();
+
+          }
+        );
+
+      });
+
+  }
+
+
+  // ==========================================
+  // 사진 업로드
+  // ==========================================
+
+  uploadButton.addEventListener(
+    "click",
+    async () => {
+
+      const file =
+        fileInput.files[0];
+
+      const title =
+        titleInput.value.trim();
+
+      const description =
+        descriptionInput.value.trim();
+
+
+      if (!file) {
+
+        message.textContent =
+          "사진을 선택해주세요.";
+
+        return;
+
+      }
+
+
+      if (!title) {
+
+        message.textContent =
+          "사진 제목을 입력해주세요.";
+
+        return;
+
+      }
+
+
+      uploadButton.disabled =
+        true;
+
+      uploadButton.textContent =
+        "등록 중...";
+
+      message.textContent =
+        "";
+
+
+      try {
+
+        // 파일명 중복 방지
+        const fileName =
+          `${Date.now()}-${file.name}`
+            .replace(
+              /\s+/g,
+              "-"
+            );
+
+
+        const filePath =
+          fileName;
+
+
+        // Storage 업로드
+        const {
+          error: uploadError
+        } =
+          await supabase
+            .storage
+            .from(
+              "exhibition-photos"
+            )
+            .upload(
+              filePath,
+              file
+            );
+
+
+        if (uploadError) {
+
+          throw uploadError;
+
+        }
+
+
+        // DB에 사진 정보 저장
+        const {
+          error: insertError
+        } =
+          await supabase
+            .from("photos")
+            .insert({
+
+              title:
+                title,
+
+              description:
+                description,
+
+              image_path:
+                filePath,
+
+              is_published:
+                false
+
+            });
+
+
+        if (insertError) {
+
+          throw insertError;
+
+        }
+
+
+        message.textContent =
+          "사진이 등록되었습니다.";
+
+
+        fileInput.value =
+          "";
+
+        titleInput.value =
+          "";
+
+        descriptionInput.value =
+          "";
+
+
+        await loadPhotos();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+          "사진 등록에 실패했습니다. 관리자 권한을 확인해주세요.";
+
+      }
+
+
+      uploadButton.disabled =
+        false;
+
+      uploadButton.textContent =
+        "사진 등록";
+
+    }
+  );
+
+
+  // 처음 실행
+  loadPhotos();
+
+</script>
+
+</body>
+</html>
