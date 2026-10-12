@@ -687,14 +687,19 @@
           "";
 
 
+        
         await loadPhotos();
 
+      } catch (error) {
+        console.error(error);
+        message.textContent =
+          "등록 실패: " + (error.message || JSON.stringify(error));
 
-  catch (error) {
-  console.error(error);
-  message.textContent =
-    "등록 실패: " + (error.message || JSON.stringify(error));}
-      
+      } finally {
+        uploadButton.disabled = false;
+        uploadButton.textContent = "사진 등록";
+      }
+
 
 
       uploadButton.disabled =
