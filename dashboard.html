@@ -231,6 +231,17 @@
       placeholder="사진 제목을 입력하세요"
     >
 
+    
+    <label for="photo-author">
+  사진 작가 이름
+</label>
+
+<input
+  type="text"
+  id="photo-author"
+  placeholder="작가 이름을 입력하세요"
+>
+
 
     <label for="photo-description">
       설명
@@ -305,6 +316,9 @@
   const titleInput =
     document.getElementById("photo-title");
 
+  const authorInput =
+  document.getElementById("photo-author");
+  
   const descriptionInput =
     document.getElementById("photo-description");
 
@@ -555,7 +569,10 @@
 
       const title =
         titleInput.value.trim();
-
+      
+      const authorName =
+  authorInput.value.trim();
+      
       const description =
         descriptionInput.value.trim();
 
@@ -638,6 +655,9 @@
               title:
                 title,
 
+              author_name: 
+                authorName,
+
               description:
                 description,
 
@@ -645,7 +665,7 @@
                 filePath,
 
               is_published:
-                false
+                true
 
             });
 
